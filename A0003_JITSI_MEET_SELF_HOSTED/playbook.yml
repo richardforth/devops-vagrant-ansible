@@ -1,0 +1,172 @@
+---
+- name: Bootstrap server setup
+  hosts: all
+  become: yes
+
+  tasks:
+    # === Update and Upgrade ===
+    - name: Update apt cache (Debian)
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+      when: ansible_os_family == "Debian"
+
+    - name: Upgrade all packages (Debian)
+      apt:
+        upgrade: dist
+      when: ansible_os_family == "Debian"
+
+    - name: Update dnf cache (RedHat)
+      dnf:
+        update_cache: yes
+      when: ansible_os_family == "RedHat"
+
+    - name: Upgrade all packages (RedHat)
+      dnf:
+        name: "*"
+        state: latest
+      when: ansible_os_family == "RedHat"
+
+    # === Install packages ===
+    - name: Install essential packages (Debian)
+      apt:
+        name:
+          - vim
+          - emacs
+          - nginx-full
+          - gnupg2
+          - curl
+          - wget
+          - apt-transport-https
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Install essential packages (RedHat)
+      dnf:
+        name:
+          - vim
+          - emacs
+          - nginx
+          - gnupg2
+          - curl
+          - wget
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    # === Repositories ===
+    - name: Add universe repo (Debian/Ubuntu)
+      apt_repository:
+        repo: 'deb http://archive.ubuntu.com/ubuntu {{ ansible_distribution_release }} universe'
+        state: present
+        filename: 'universe'
+      when: ansible_os_family == "Debian"
+
+    - name: Add Prosody APT key (Debian)
+      get_url:
+        url: https://prosody.im/files/prosody-debian-packages.key
+        dest: /etc/apt/keyrings/prosody-debian-packages.key
+        mode: '0644'
+      when: ansible_os_family == "Debian"
+
+    - name: Add Prosody repository (Debian)
+      apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/prosody-debian-packages.key] http://packages.prosody.im/debian {{ ansible_distribution_release }} main"
+        filename: prosody-debian-packages
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Install lua5.2 (Debian)
+      apt:
+        name: lua5.2
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Install lua (RedHat)
+      dnf:
+        name: lua
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Add Jitsi GPG key (Debian)
+      shell: |
+        curl -sL https://download.jitsi.org/jitsi-key.gpg.key | gpg --dearmor > /usr/share/keyrings/jitsi-keyring.gpg
+      args:
+        creates: /usr/share/keyrings/jitsi-keyring.gpg
+      when: ansible_os_family == "Debian"
+
+    - name: Add Jitsi repository (Debian)
+      apt_repository:
+        repo: "deb [signed-by=/usr/share/keyrings/jitsi-keyring.gpg] https://download.jitsi.org stable/"
+        filename: jitsi-stable
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Update apt after adding repositories (Debian)
+      apt:
+        update_cache: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Update dnf after adding repos (RedHat)
+      dnf:
+        update_cache: yes
+      when: ansible_os_family == "RedHat"
+
+    # === Firewall rules ===
+    - name: Allow UFW ports (Debian)
+      ufw:
+        rule: allow
+        port: "{{ item.port }}"
+        proto: "{{ item.proto }}"
+      loop:
+        - { port: "80", proto: "tcp" }
+        - { port: "443", proto: "tcp" }
+        - { port: "10000", proto: "udp" }
+        - { port: "22", proto: "tcp" }
+        - { port: "3478", proto: "udp" }
+        - { port: "5349", proto: "tcp" }
+      when: ansible_os_family == "Debian"
+
+    - name: Enable UFW (Debian)
+      ufw:
+        state: enabled
+        policy: allow
+      when: ansible_os_family == "Debian"
+
+    - name: Show UFW status (Debian)
+      command: ufw status verbose
+      register: ufw_status
+      when: ansible_os_family == "Debian"
+
+    - name: Print UFW status (Debian)
+      debug:
+        var: ufw_status.stdout_lines
+      when: ansible_os_family == "Debian"
+
+    - name: Install firewalld (RedHat)
+      dnf:
+        name: firewalld
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Start and enable firewalld (RedHat)
+      service:
+        name: firewalld
+        state: started
+        enabled: yes
+      when: ansible_os_family == "RedHat"
+
+    - name: Open firewall ports (RedHat)
+      firewalld:
+        port: "{{ item.port }}/{{ item.proto }}"
+        permanent: true
+        state: enabled
+        immediate: yes
+      loop:
+        - { port: "80", proto: "tcp" }
+        - { port: "443", proto: "tcp" }
+        - { port: "10000", proto: "udp" }
+        - { port: "22", proto: "tcp" }
+        - { port: "3478", proto: "udp" }
+        - { port: "5349", proto: "tcp" }
+      when: ansible_os_family == "RedHat"
+
