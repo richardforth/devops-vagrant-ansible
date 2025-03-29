@@ -4,6 +4,21 @@
   become: yes
 
   tasks:
+    # ================ NOTES ===================
+    # ONLY DEBIAN AND UBUNTU SUPPORTED SEE WEB
+    # SITE: https://jitsi.org/downloads/
+    # BASED ON: https://jitsi.github.io/handbook/docs/devops-guide/devops-guide-quickstart
+
+    # === Cleanup task to ensure idempotency ===
+    # Clean up conflicting repo (optional but recommended)
+    # This might not need to stay, but while we are troubleshooting the repos not adding right
+    - name: Remove manually added universe repo (if exists)
+      apt_repository:
+        repo: "deb http://archive.ubuntu.com/ubuntu {{ ansible_distribution_release }} universe"
+        state: absent
+        filename: 'universe'
+      when: ansible_distribution == "Ubuntu"
+ 
     # === Update and Upgrade ===
     - name: Update apt cache (Debian)
       apt:
@@ -15,17 +30,6 @@
       apt:
         upgrade: dist
       when: ansible_os_family == "Debian"
-
-    - name: Update dnf cache (RedHat)
-      dnf:
-        update_cache: yes
-      when: ansible_os_family == "RedHat"
-
-    - name: Upgrade all packages (RedHat)
-      dnf:
-        name: "*"
-        state: latest
-      when: ansible_os_family == "RedHat"
 
     # === Install packages ===
     - name: Install essential packages (Debian)
@@ -41,25 +45,19 @@
         state: present
       when: ansible_os_family == "Debian"
 
-    - name: Install essential packages (RedHat)
-      dnf:
-        name:
-          - vim
-          - emacs
-          - nginx
-          - gnupg2
-          - curl
-          - wget
-        state: present
-      when: ansible_os_family == "RedHat"
-
     # === Repositories ===
-    - name: Add universe repo (Debian/Ubuntu)
+    - name: Ensure Ubuntu archive keyring is installed
+      apt:
+        name: ubuntu-keyring
+        state: present
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Add universe repo (Ubuntu)
       apt_repository:
-        repo: 'deb http://archive.ubuntu.com/ubuntu {{ ansible_distribution_release }} universe'
+        repo: "deb [signed-by=/usr/share/keyrings/ubuntu-archive-keyring.gpg] http://archive.ubuntu.com/ubuntu {{ ansible_distribution_release }} universe"
         state: present
         filename: 'universe'
-      when: ansible_os_family == "Debian"
+      when: ansible_distribution == "Ubuntu"
 
     - name: Add Prosody APT key (Debian)
       get_url:
@@ -81,12 +79,6 @@
         state: present
       when: ansible_os_family == "Debian"
 
-    - name: Install lua (RedHat)
-      dnf:
-        name: lua
-        state: present
-      when: ansible_os_family == "RedHat"
-
     - name: Add Jitsi GPG key (Debian)
       shell: |
         curl -sL https://download.jitsi.org/jitsi-key.gpg.key | gpg --dearmor > /usr/share/keyrings/jitsi-keyring.gpg
@@ -105,11 +97,6 @@
       apt:
         update_cache: yes
       when: ansible_os_family == "Debian"
-
-    - name: Update dnf after adding repos (RedHat)
-      dnf:
-        update_cache: yes
-      when: ansible_os_family == "RedHat"
 
     # === Firewall rules ===
     - name: Allow UFW ports (Debian)
@@ -141,32 +128,4 @@
       debug:
         var: ufw_status.stdout_lines
       when: ansible_os_family == "Debian"
-
-    - name: Install firewalld (RedHat)
-      dnf:
-        name: firewalld
-        state: present
-      when: ansible_os_family == "RedHat"
-
-    - name: Start and enable firewalld (RedHat)
-      service:
-        name: firewalld
-        state: started
-        enabled: yes
-      when: ansible_os_family == "RedHat"
-
-    - name: Open firewall ports (RedHat)
-      firewalld:
-        port: "{{ item.port }}/{{ item.proto }}"
-        permanent: true
-        state: enabled
-        immediate: yes
-      loop:
-        - { port: "80", proto: "tcp" }
-        - { port: "443", proto: "tcp" }
-        - { port: "10000", proto: "udp" }
-        - { port: "22", proto: "tcp" }
-        - { port: "3478", proto: "udp" }
-        - { port: "5349", proto: "tcp" }
-      when: ansible_os_family == "RedHat"
 
