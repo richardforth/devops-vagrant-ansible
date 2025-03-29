@@ -1,6 +1,7 @@
 # Missing vault.yml
 
-To keep a clear repo  - and a clear conscience -  I haven't committed any vault.yml files
+To keep a clear repo  - and a clear conscience -  I haven't committed any vault.yml files.
+
 To see how to recreate the vault.yml file, check out this blog post:
 
 https://richardforth78.wordpress.com/2025/03/28/using-ansible-vault-variables-in-playbooks-in-later-versions-of-ansible/
