@@ -1,8 +1,21 @@
+# === Ansible Secrets ===
 vault.yml
 vault.yaml
 secrets.yml
 secrets.yaml
+
+# === Debugging playbooks that might have sensitive info in them ===
 debug_playbook.yml
 debug_playbook.yaml
-.env
+
+
+# === emacs generated backup files ===
 *~
+
+# === Miscellaneous items ===
+.env
+.env.local
+
+# === vagrant artifacts ===
+.vagrant/
+
