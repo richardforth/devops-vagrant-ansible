@@ -6,4 +6,4 @@
 
 SOLR_DOMAIN=solr.example.com vagrant up --provision
 
-``
+```
