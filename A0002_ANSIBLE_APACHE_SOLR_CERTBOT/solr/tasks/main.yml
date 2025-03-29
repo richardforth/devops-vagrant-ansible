@@ -1,0 +1,15 @@
+---
+- name: Install Solr
+  include_tasks: install_solr.yml
+
+- name: Configure Apache ready for certbot
+  include_tasks: configure_apache_part_one.yml
+
+- name: Issue SSL Certificate
+  include_tasks: issue_certificate.yml
+
+- name: Configure Apache for SSL
+  include_tasks: configure_apache_part_two.yml
+
+- name: Start Services
+  include_tasks: start_services.yml
