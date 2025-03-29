@@ -2,6 +2,10 @@
 - name: Bootstrap server setup
   hosts: all
   become: yes
+  vars_prompt:
+  - name: solr_domain
+    prompt: "Enter the domain for Solr"
+    private: no
 
   tasks:
     # ================ NOTES ===================
@@ -51,6 +55,8 @@
         prompt: "Paused here. Press Enter to continue..."
 
     # === Configure Certbot and Provision an SSL
+    # === Provision an SSL Certificate for {{ jitsi_domain }} using Let's Encrypt/Certbot
+    
     # TBA
 
     # === Repositories ===
@@ -106,12 +112,13 @@
         update_cache: yes
       when: ansible_os_family == "Debian"
 
-    # === Installl Jitsi Meet ===
-    - name: Install jitsi-meet (Debian)
-      apt:
-        name: jitsi-meet
-        state: present
-      when: ansible_os_family == "Debian"
+#    # == Commented for Troubleshooting ==
+#    # === Installl Jitsi Meet ===
+#    - name: Install jitsi-meet (Debian)
+#      apt:
+#        name: jitsi-meet
+#        state: present
+#      when: ansible_os_family == "Debian"
 
     # === Firewall rules ===
     - name: Allow UFW ports (Debian)
