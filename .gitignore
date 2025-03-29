@@ -1,0 +1,5 @@
+vault.yml
+secrets.yml
+debug_playbook.yaml
+.env
+
