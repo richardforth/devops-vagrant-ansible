@@ -1,18 +1,18 @@
-# Install and configure MySQL 5.7  
+# Install and configure Ubuntu 24.04 with Percona 8.0  
 # - db   
 Vagrant.configure("2") do |config|    
-  # Build Ubuntu 24.04 DB Server Running MySQL 5.7
+  # Build Ubuntu 24.04 DB Server Running MySQL 8.0
   config.vm.define "db" do |db|
     db.vm.box = "bento/ubuntu-24.04"    
-    db.vm.hostname = "ubu2404percona"   
+    db.vm.hostname = "ubu2404percona80"   
     db.vm.provider "virtualbox" do |vb|   
-      vb.name = "ubu2404_percona_5_7" 
+      vb.name = "ubu2404_percona_8_0" 
       vb.memory = 2048 
       vb.cpus = 1 
     end 
     db.vm.network "forwarded_port", guest: 3306, host: 3306
     #db.vm.provision :shell, path: "mysql57-bootstrap-custom-centos7.sh" 
-    db.vm.provision "shell", inline: "echo 'Installing Percona 5.7 via ansible...'" 
+    db.vm.provision "shell", inline: "echo 'Installing Percona 8.0 via ansible...'" 
     # Provisioning configuration for Ansible
     db.vm.provision "ansible" do |ansible|
 	ansible.playbook = "playbook.yml"
