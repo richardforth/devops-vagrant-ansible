@@ -1,0 +1,176 @@
+---
+- hosts: all
+  gather_facts: true
+  become: true
+  vars:
+    key_packages:
+      - python3
+      - python3-pip
+      - python3-pymysql
+      # - MySQL-python
+  vars_files:
+  - vault.yml
+         
+  tasks:
+  - name: Show all facts
+    debug:
+      var: ansible_facts
+      
+  - name: Update apt cache
+    apt:
+      update_cache: yes
+    when: ansible_os_family == "Debian"
+ 
+  - name: "install package - wget"
+    apt:
+      name: wget
+      state: present
+    when: ansible_os_family == "Debian" 
+
+  # Required by the next task
+  - name: install key packages
+    apt:
+      name: "{{ key_packages }}"
+      state: present
+    when: ansible_os_family == "Debian"
+
+  - name: Install required dependencies
+    apt:
+      name: gnupg
+      state: present
+      update_cache: yes
+    when: ansible_os_family == "Debian"
+    
+  - name: Add Percona APT GPG key (workaround using apt-key adv)
+    command: >
+      apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 9334A25F8507EFA5
+    register: add_percona_key
+    changed_when: "'imported' in add_percona_key.stdout"
+    when: ansible_os_family == "Debian"
+    
+  - name: Add Percona APT repo using focal as workaround
+    apt_repository:
+      repo: "deb http://repo.percona.com/apt focal main"
+      state: present
+      filename: percona
+    when: ansible_os_family == "Debian"
+    
+  - name: Update apt cache
+    apt:
+      update_cache: yes
+    when: ansible_os_family == "Debian"
+
+  - name: Install Percona release package
+    apt:
+      deb: https://repo.percona.com/apt/percona-release_latest.generic_all.deb
+
+  - name: Enable Percona Server 8.0 repository
+    command: percona-release setup ps80
+    args:
+      creates: /etc/apt/sources.list.d/percona-ps-80.list
+
+  - name: Update apt cache
+    apt:
+      update_cache: yes
+
+  - name: Install Percona Server 8.0 without prompt
+    apt:
+      name: percona-server-server
+      state: present
+      force: yes
+      install_recommends: no
+      update_cache: yes
+
+  - name: Wait for MySQL to be up
+    wait_for:
+      port: 3306
+      state: started
+      delay: 5
+      timeout: 60
+
+  - name: Set root password and switch auth plugin
+    mysql_user:
+      login_unix_socket: /var/run/mysqld/mysqld.sock
+      name: root
+      host: localhost
+      password: "{{ mysql_root_password }}"
+      login_user: root
+      check_implicit_admin: yes
+      priv: '*.*:ALL,GRANT'
+      plugin: mysql_native_password
+      state: present
+
+  - name: Create root ~/.my.cnf for future logins
+    copy:
+      dest: /root/.my.cnf
+      mode: '0600'
+      content: |
+        [client]
+        user=root
+        password={{ mysql_root_password }}
+
+  # Required by the next task on RedHat
+  - name: Make sure pymysql module is present
+    pip:
+      name:
+       - pymysql
+      executable: /bin/pip3
+      state: present
+    when: ansible_os_family == "RedHat"
+    
+
+  # NOT required when preseeding in debian/ubuntu
+  # mysql_secure_installation
+  - name: Update percona mysql root password
+    mysql_user: name=root host={{item}} password={{mysql_root_password}}
+    with_items:
+      - 127.0.0.1
+      - ::1
+      - localhost
+    when: ansible_os_family == "RedHat"
+
+  # important that this is the next task after resetting the mysql root passowrd
+  - name: create a mysql options file for root user
+    template:
+      src: .my.cnf
+      dest: /root/.my.cnf
+      owner: root
+      group: root
+      mode: 0600
+
+  # important that this is the next task after resetting the mysql root passowrd
+  - name: create a mysql options file for vagrant user
+    template:
+      src: .my.cnf
+      dest: /home/vagrant/.my.cnf
+      owner: vagrant
+      group: vagrant
+      mode: 0600
+
+  # add a delay before trying the next task
+  - name: sleep for a bit to add a delay
+    ansible.builtin.pause:
+      seconds: 5
+
+  # mysql_secure_installation
+  - name: Delete anonymous MySQL user
+    mysql_user: name="" host={{item}} state=absent
+    with_items:
+      - localhost
+      - "{{ansible_nodename}}"
+
+  # mysql_secure_installation
+  - name: Delete Hostname based MySQL user
+    mysql_user: name=root host="{{ansible_nodename}}" state=absent
+
+  # mysql_secure_installation
+  - name: Remove MySQL test database
+    mysql_db: name=test state=absent
+
+  - name: Set the Message Of The Day (MOTD).
+    template:
+      src: motd
+      dest: /etc/motd
+      owner: root
+      group: root
+      mode: 0644
