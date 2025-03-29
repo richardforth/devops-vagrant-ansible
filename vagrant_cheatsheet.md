@@ -69,6 +69,7 @@ Here the default is set to `solr.default.local` which obviously will fail to sat
 
 ## Get SSH config from vagrant to use in say VS Code
 Attribution link: https://medium.com/@lizrice/ssh-to-vagrant-from-vscode-5b2c5996bc0e
+
 VSCode Plugin Link: https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh
 
 ```bash
@@ -77,5 +78,5 @@ vagrant ssh-config
 
 ```
 Copy and paste the output of that into your ~/.ssh/config on Linux, or
-C:\Users\YourUsername\.ssh\config on windows
+C:\Users\YourUsername\\.ssh\config on windows
 
