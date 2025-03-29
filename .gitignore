@@ -8,6 +8,9 @@ secrets.yaml
 debug_playbook.yml
 debug_playbook.yaml
 
+# === Intellectual Property that should not be committed
+solr/
+moodle/
 
 # === emacs generated backup files ===
 *~
