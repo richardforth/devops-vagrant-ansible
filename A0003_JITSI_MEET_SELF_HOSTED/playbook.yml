@@ -45,6 +45,14 @@
         state: present
       when: ansible_os_family == "Debian"
 
+    # === Insert a breakpoint ===
+    - name: Breakpoint - pause for manual inspection
+      pause:
+        prompt: "Paused here. Press Enter to continue..."
+
+    # === Configure Certbot and Provision an SSL
+    # TBA
+
     # === Repositories ===
     - name: Ensure Ubuntu archive keyring is installed
       apt:
@@ -96,6 +104,13 @@
     - name: Update apt after adding repositories (Debian)
       apt:
         update_cache: yes
+      when: ansible_os_family == "Debian"
+
+    # === Installl Jitsi Meet ===
+    - name: Install jitsi-meet (Debian)
+      apt:
+        name: jitsi-meet
+        state: present
       when: ansible_os_family == "Debian"
 
     # === Firewall rules ===
