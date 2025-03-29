@@ -1,0 +1,1 @@
+    config.vm.post_up_message = "Run 'vagrant ssh' to get started."
