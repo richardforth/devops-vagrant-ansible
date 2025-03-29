@@ -22,3 +22,5 @@ moodle/
 # === vagrant artifacts ===
 .vagrant/
 
+# === Log files
+*.log
