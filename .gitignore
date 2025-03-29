@@ -1,5 +1,8 @@
 vault.yml
+vault.yaml
 secrets.yml
+secrets.yaml
+debug_playbook.yml
 debug_playbook.yaml
 .env
-
+*~
