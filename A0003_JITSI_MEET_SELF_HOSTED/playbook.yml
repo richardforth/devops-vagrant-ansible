@@ -3,11 +3,15 @@
   hosts: all
   become: yes
   vars_prompt:
-  - name: solr_domain
-    prompt: "Enter the domain for Solr"
-    private: no
+    - name: jitsi_domain
+      prompt: "Enter the domain for Jitsi Meet"
+      private: no
 
   tasks:
+    - name: Echo back the domain passed to the playbook
+      debug:
+        msg: "jitsi domain = {{ jitsi_domain }}"
+
     # ================ NOTES ===================
     # ONLY DEBIAN AND UBUNTU SUPPORTED SEE WEB
     # SITE: https://jitsi.org/downloads/
@@ -22,7 +26,7 @@
         state: absent
         filename: 'universe'
       when: ansible_distribution == "Ubuntu"
- 
+
     # === Update and Upgrade ===
     - name: Update apt cache (Debian)
       apt:
@@ -56,7 +60,7 @@
 
     # === Configure Certbot and Provision an SSL
     # === Provision an SSL Certificate for {{ jitsi_domain }} using Let's Encrypt/Certbot
-    
+
     # TBA
 
     # === Repositories ===
@@ -150,4 +154,3 @@
       debug:
         var: ufw_status.stdout_lines
       when: ansible_os_family == "Debian"
-
