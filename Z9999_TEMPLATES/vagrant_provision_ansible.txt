@@ -1,0 +1,5 @@
+  # the two space indent is on purpose to line up with a typical Vagrantfile
+  # Provisioning configuration for Ansible
+  config.vm.provision "ansible" do |ansible|
+  	ansible.playbook = "playbook.yml"
+  end
