@@ -1,0 +1,10 @@
+=================================================================== 
+             THIS SYSTEM IS MANAGED BY ANSIBLE 
+=================================================================== 
+OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+
+         NO MANUAL CHANGES TO BE MADE HERE
+     All connections are monitored and recorded.
+
+ DISCONNECT IMMEDIATELY if you are not an Authorised User. 
+==================================================================
