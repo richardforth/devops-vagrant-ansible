@@ -1,0 +1,10 @@
+---
+- hosts: localhost
+  become: yes
+  vars_prompt:
+    - name: solr_domain
+      prompt: "Enter the domain for Solr"
+      private: no
+      when: solr_domain is not defined 
+  roles:
+    - solr
