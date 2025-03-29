@@ -1,0 +1,6 @@
+  config.vm.network "forwarded_port", guest: 80, host: 8080
+  config.vm.network "forwarded_port", guest: 443, host: 8443, protocol: "tcp"
+  config.vm.network "forwarded_port", guest: 10000, host: 10000, protocol: "udp"
+  config.vm.network "forwarded_port", guest: 22, host: 2222, protocol: "tcp"
+  config.vm.network "forwarded_port", guest: 3478, host: 3478, protocol: "udp"
+  config.vm.network "forwarded_port", guest: 5349, host: 5349, protocol: "tcp"
