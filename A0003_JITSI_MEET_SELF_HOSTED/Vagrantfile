@@ -80,11 +80,11 @@ Vagrant.configure("2") do |config|
   #   apt-get update
   #   apt-get install -y apache2
   # SHELL
-
   config.vm.provision "ansible" do |ansible|
     ansible.playbook = "playbook.yml"
     ansible.extra_vars = {
-      jitsi_domain: ENV['JITSI_DOMAIN'] || "jitsi.default.local"
+      jitsi_domain: ENV['JITSI_DOMAIN'] || "jitsi.meet.local",
+      jitsi_email:  ENV['JITSI_EMAIL']  || "admin@jitsi.meet.local"
     }
   end
 end
