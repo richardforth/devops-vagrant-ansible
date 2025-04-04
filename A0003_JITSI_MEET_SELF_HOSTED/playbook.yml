@@ -222,11 +222,16 @@
         create: yes
         state: present
 
-    - name: Restart jitsi-videobridge2 service
-      systemd:
-        name: jitsi-videobridge2
+    - name: Restart Jitsi and related services
+      ansible.builtin.systemd:
+        name: "{{ item }}"
         state: restarted
         enabled: yes
+      loop:
+        - prosody
+        - jicofo
+        - jitsi-videobridge2
+        - nginx
 
 #    # == It turns out we did not need this once we mastered preseeding, but I kept it
 #    # == for posterity and future reference
