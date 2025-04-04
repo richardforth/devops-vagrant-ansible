@@ -13,7 +13,8 @@ Vagrant.configure("2") do |config|
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://vagrantcloud.com/search.
   config.vm.box = "bento/ubuntu-24.04"
-
+  config.vm.hostname = "jitsi-meet"
+  
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
   # `vagrant box outdated`. This is not recommended.
@@ -29,8 +30,10 @@ Vagrant.configure("2") do |config|
   config.vm.network "forwarded_port", guest: 10000, host: 10000, protocol: "udp"
   config.vm.network "forwarded_port", guest: 22, host: 2222, protocol: "tcp"
   config.vm.network "forwarded_port", guest: 3478, host: 3478, protocol: "udp"
+  config.vm.network "forwarded_port", guest: 5222, host: 5222, protocol: "tcp"
+  config.vm.network "forwarded_port", guest: 5347, host: 5347, protocol: "tcp"
   config.vm.network "forwarded_port", guest: 5349, host: 5349, protocol: "tcp"
-
+  
   # Create a forwarded port mapping which allows access to a specific port
   # within the machine from a port on the host machine and only allow access
   # via 127.0.0.1 to disable public access
