@@ -214,6 +214,20 @@
       environment:
         DEBIAN_FRONTEND: noninteractive
 
+    - name: Set or update JVB_OPTS in jitsi-videobridge2 config
+      lineinfile:
+        path: /etc/default/jitsi-videobridge2
+        regexp: '^JVB_OPTS='
+        line: 'JVB_OPTS="--apis=rest"'
+        create: yes
+        state: present
+
+    - name: Restart jitsi-videobridge2 service
+      systemd:
+        name: jitsi-videobridge2
+        state: restarted
+        enabled: yes
+
 #    # == It turns out we did not need this once we mastered preseeding, but I kept it
 #    # == for posterity and future reference
 #    # === Provision Let's Encrypt SSL Manually using the jitsi tool ===
