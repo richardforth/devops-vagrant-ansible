@@ -6,6 +6,10 @@
     - name: jitsi_domain
       prompt: "Enter the domain for Jitsi Meet"
       private: no
+      
+    - name: jitsi_email
+      prompt: "Enter the email address to use for Let's Encrypt registration"
+      private: no
 
   tasks:
     - name: Echo back the domain passed to the playbook
@@ -52,16 +56,6 @@
           - apt-transport-https
         state: present
       when: ansible_os_family == "Debian"
-
-    # === Insert a breakpoint ===
-    - name: Breakpoint - pause for manual inspection
-      pause:
-        prompt: "Paused here. Press Enter to continue..."
-
-    # === Configure Certbot and Provision an SSL
-    # === Provision an SSL Certificate for {{ jitsi_domain }} using Let's Encrypt/Certbot
-
-    # TBA
 
     # === Repositories ===
     - name: Ensure Ubuntu archive keyring is installed
@@ -135,14 +129,14 @@
       debconf:
         name: jitsi-meet
         question: jitsi-meet/letsencrypt-email
-        value: richard.forth@gmail.com
+        value: "{{ jitsi_email }}"
         vtype: string
     
     - name: Preseed Let's Encrypt email (web config fallback)
       debconf:
         name: jitsi-meet-web-config
         question: jitsi-meet/email
-        value: richard.forth@gmail.com
+        value: "{{ jitsi_email }}"
         vtype: string
     
     - name: Disable JaaS integration
@@ -193,12 +187,14 @@
         state: present
       environment:
         DEBIAN_FRONTEND: noninteractive
-
+	
+#    # == It turns out we did not need this once we mastered preseeding, but I kept it
+#    # == for posterity and future reference
 #    # === Provision Let's Encrypt SSL Manually using the jitsi tool ===
 #    - name: Run Let's Encrypt setup (with email fallback)
-#      shell: CERT_EMAIL=richard.forth@gmail.com /usr/share/jitsi-meet/scripts/install-letsencrypt-cert.sh
+#      shell: "CERT_EMAIL={{ jitsi_email }} /usr/share/jitsi-meet/scripts/install-letsencrypt-cert.sh"
 #      args:
-#        creates: /etc/letsencrypt/live/meet.richardforth.co.uk/fullchain.pem
+#        creates: "/etc/letsencrypt/live/{{ jitsi_domain }}/fullchain.pem"
  
     # === Firewall rules ===
     - name: Allow UFW ports (Debian)
