@@ -14,7 +14,33 @@
   tasks:
     - name: Echo back the domain passed to the playbook
       debug:
-        msg: "jitsi domain = {{ jitsi_domain }}"
+       msg: "jitsi domain = {{ jitsi_domain }}"
+
+    - name: Echo back the email passed to the playbook
+      debug:
+        msg: "jitsi email = {{ jitsi_email }}"
+
+    - name: End playbook early if domain and email are defaults
+      fail:
+        msg: |
+         PLAYBOOK ERROR:
+
+         jitsi_domain is the default {{ jitsi_domain }}
+
+         please change it by passing evironment variables, like so
+         JITSI_DOMAIN=meet.example.com JITSI_EMAIL=jitsi@example.com vagrant up
+      when: jitsi_domain == "jitsi.meet.local" 
+
+    - name: End playbook early if domain and email are defaults
+      fail:
+        msg: |
+         PLAYBOOK ERROR:
+
+         jitsi_email is the default {{ jitsi_email }}
+ 
+         please change it by passing evironment variables, like so
+         JITSI_DOMAIN=meet.example.com JITSI_EMAIL=jitsi@example.com vagrant up
+      when: jitsi_email == "admin@jitsi.meet.local"
 
     # ================ NOTES ===================
     # ONLY DEBIAN AND UBUNTU SUPPORTED SEE WEB
@@ -187,7 +213,7 @@
         state: present
       environment:
         DEBIAN_FRONTEND: noninteractive
-	
+
 #    # == It turns out we did not need this once we mastered preseeding, but I kept it
 #    # == for posterity and future reference
 #    # === Provision Let's Encrypt SSL Manually using the jitsi tool ===
@@ -195,7 +221,7 @@
 #      shell: "CERT_EMAIL={{ jitsi_email }} /usr/share/jitsi-meet/scripts/install-letsencrypt-cert.sh"
 #      args:
 #        creates: "/etc/letsencrypt/live/{{ jitsi_domain }}/fullchain.pem"
- 
+
     # === Firewall rules ===
     - name: Allow UFW ports (Debian)
       ufw:
