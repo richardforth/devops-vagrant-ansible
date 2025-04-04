@@ -116,14 +116,90 @@
         update_cache: yes
       when: ansible_os_family == "Debian"
 
-#    # == Commented for Troubleshooting ==
-#    # === Installl Jitsi Meet ===
-#    - name: Install jitsi-meet (Debian)
-#      apt:
-#        name: jitsi-meet
-#        state: present
-#      when: ansible_os_family == "Debian"
+    # === Pre Seed Jitsi Meet to Prevent TUI Prompts ===
+    - name: Preseed Jitsi Meet hostname
+      debconf:
+        name: jitsi-meet
+        question: jitsi-meet/hostname
+        value: "{{ jitsi_domain }}"
+        vtype: string
+    
+    - name: Preseed Let's Encrypt certificate choice
+      debconf:
+        name: jitsi-meet
+        question: jitsi-meet/cert-choice
+        value: Use Let's Encrypt certificate
+        vtype: select
+    
+    - name: Preseed Let's Encrypt email (main)
+      debconf:
+        name: jitsi-meet
+        question: jitsi-meet/letsencrypt-email
+        value: richard.forth@gmail.com
+        vtype: string
+    
+    - name: Preseed Let's Encrypt email (web config fallback)
+      debconf:
+        name: jitsi-meet-web-config
+        question: jitsi-meet/email
+        value: richard.forth@gmail.com
+        vtype: string
+    
+    - name: Disable JaaS integration
+      debconf:
+        name: jitsi-meet-web-config
+        question: jitsi-meet/jvb-enable-jaas
+        value: false
+        vtype: boolean
+    
+    - name: Disable JVB hostname assignment
+      debconf:
+        name: jitsi-meet-web-config
+        question: jitsi-meet/jvb-assign-jvb-hostname
+        value: false
+        vtype: boolean
+    
+    - name: Disable jvb-brew-install (extra services)
+      debconf:
+        name: jitsi-meet
+        question: jitsi-meet/jvb-brew-install
+        value: false
+        vtype: boolean
 
+    - name: Preseed jitsi-meet-prosody jvb hostname
+      ansible.builtin.debconf:
+        name: jitsi-meet-prosody
+        question: jitsi-meet-prosody/jvb-hostname
+        value: "{{ jitsi_domain }}"
+        vtype: string
+ 
+    - name: Preseed jitsi-meet-prosody dial-in support (Jigasi)
+      ansible.builtin.debconf:
+        name: jitsi-meet-prosody
+        question: jitsi-meet-prosody/jigasi-sip-account
+        value: "false"
+        vtype: boolean
+
+    - name: Preseed jitsi-videobridge2 hostname
+      ansible.builtin.debconf:
+        name: jitsi-videobridge2
+        question: jitsi-videobridge/jvb-hostname
+        value: "{{ jitsi_domain }}"
+        vtype: string
+
+    - name: Install Jitsi Meet non-interactively
+      apt:
+        name: jitsi-meet
+        state: present
+      environment:
+        DEBIAN_FRONTEND: noninteractive
+
+#    # === Provision Let's Encrypt SSL Manually using the jitsi tool ===
+#    - name: Run Let's Encrypt setup (with email fallback)
+#      shell: CERT_EMAIL=richard.forth@gmail.com /usr/share/jitsi-meet/scripts/install-letsencrypt-cert.sh
+#      args:
+#        creates: /etc/letsencrypt/live/meet.richardforth.co.uk/fullchain.pem
+ 
     # === Firewall rules ===
     - name: Allow UFW ports (Debian)
       ufw:
@@ -136,6 +212,8 @@
         - { port: "10000", proto: "udp" }
         - { port: "22", proto: "tcp" }
         - { port: "3478", proto: "udp" }
+        - { port: "5222", proto: "tcp" }
+        - { port: "5347", proto: "tcp" }
         - { port: "5349", proto: "tcp" }
       when: ansible_os_family == "Debian"
 
