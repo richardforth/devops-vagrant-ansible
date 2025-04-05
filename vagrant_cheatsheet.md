@@ -92,22 +92,6 @@ vagrant ssh-config > ssh_config
 
 ```
 
-
-## Run a custom playbook without hacking the Vagrantfile
-
-1. Create an ssh config for the vagrant vm in the current folder:
-
-```bash
-
-vagrant ssh-config > ssh_config
-
-```
-
-Create a basic inventory file like so:
-
-```ini
-
-```
 ## Run a custom playbook without hacking the Vagrantfile
 
 1. Create an ssh config for the vagrant vm in the current folder:
