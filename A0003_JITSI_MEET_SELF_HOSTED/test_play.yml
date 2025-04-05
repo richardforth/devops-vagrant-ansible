@@ -1,0 +1,26 @@
+---
+- name: check local cert
+  hosts: all
+  become: true
+  vars_prompt:
+    - name: jitsi_domain
+      prompt: "Enter the domain for Jitsi Meet"
+      private: no
+      
+  tasks:
+    - name: register LE cert file location
+      set_fact:
+        le_cert_file: "/etc/jitsi/meet/{{ jitsi_domain }}.crt"
+
+    - name: verify LE Cert using openssl x509 command (CHECK ISSUER LINE)
+      shell: "openssl x509 -noout -subject -enddate -startdate -issuer -in {{ le_cert_file }}"
+      register: openssl_out
+
+    - name: debug openssl output
+      debug:
+        msg: "{{ openssl_out.stdout_lines }}"
+
+    - name: Fail if cert is self-signed and not LE
+      fail:
+        msg: "Cert is self Signed, LE provisioning failed, try manually with sudo/usr/share/jitsi-meet/scripts/install-letsencrypt-cert.sh {{ jitsi_email }}. It is also possible that you have hit LE rate limits if you have built certs repeadedly through playbook testing."
+      when: '"localdomain" in openssl_out.stdout'
