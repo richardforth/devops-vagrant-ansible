@@ -95,10 +95,6 @@ vagrant ssh-config > ssh_config
 2. Create a basic inventory file like so:
 
 ```ini
-
-```Create a basic inventory file like so:
-
-```ini
 [vagrant]
 default ansible_host=127.0.0.1 ansible_port=2222 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/default/virtualbox/private_key
 
