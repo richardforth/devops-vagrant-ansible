@@ -11,6 +11,10 @@
       prompt: "Enter the email address to use for Let's Encrypt registration"
       private: no
 
+  vars:
+    jitsi_admin_password: "{{ lookup('password', '/dev/null length=20 chars=ascii_letters,digits') }}"
+    auth_domain: "auth.{{ jitsi_domain }}"
+    
   tasks:
     - name: Echo back the domain passed to the playbook
       debug:
@@ -41,6 +45,23 @@
          please change it by passing evironment variables, like so
          JITSI_DOMAIN=meet.example.com JITSI_EMAIL=jitsi@example.com vagrant up
       when: jitsi_email == "admin@jitsi.meet.local"
+
+    - name: Extract username from jitsi_email
+      set_fact:
+        jitsi_admin_user: "{{ jitsi_email.split('@')[0] }}"
+
+    - name: debug admin username
+      debug:
+        msg: "Admin username is {{ jitsi_admin_user }}"
+
+    - name: Set guest domain
+      ansible.builtin.set_fact:
+        guest_domain: "guest.{{ jitsi_domain }}"
+
+    - name: debug guest domain
+      debug:
+        msg: "Guest domain is {{ guest_domain }}"
+
 
     # ================ NOTES ===================
     # ONLY DEBIAN AND UBUNTU SUPPORTED SEE WEB
@@ -222,6 +243,12 @@
         create: yes
         state: present
 
+    - name: Ensure Jicofo config file exists
+      ansible.builtin.file:
+        path: /etc/jitsi/jicofo/sip-communicator.properties
+        state: touch
+        mode: '0644'
+
     - name: Restart Jitsi and related services
       ansible.builtin.systemd:
         name: "{{ item }}"
@@ -233,13 +260,123 @@
         - jitsi-videobridge2
         - nginx
 
-#    # == It turns out we did not need this once we mastered preseeding, but I kept it
-#    # == for posterity and future reference
-#    # === Provision Let's Encrypt SSL Manually using the jitsi tool ===
-#    - name: Run Let's Encrypt setup (with email fallback)
-#      shell: "CERT_EMAIL={{ jitsi_email }} /usr/share/jitsi-meet/scripts/install-letsencrypt-cert.sh"
-#      args:
-#        creates: "/etc/letsencrypt/live/{{ jitsi_domain }}/fullchain.pem"
+    - name: Check if auth domain config exists
+      stat:
+        path: "/etc/prosody/conf.avail/{{ auth_domain }}.cfg.lua"
+      register: auth_domain_cfg
+
+    - name: Create Prosody config for auth domain if it doesn't exist
+      copy:
+        dest: "/etc/prosody/conf.avail/{{ auth_domain }}.cfg.lua"
+        content: |
+          VirtualHost "{{ auth_domain }}"
+              authentication = "internal_plain"
+              ssl = {
+                  key = "/etc/prosody/certs/{{ jitsi_domain }}.key";
+                  certificate = "/etc/prosody/certs/{{ jitsi_domain }}.crt";
+              }
+              modules_enabled = {
+                  "bosh";
+                  "pubsub";
+                  "ping";
+              }
+              c2s_require_encryption = false
+      when: not auth_domain_cfg.stat.exists
+
+    - name: Display generated Jitsi admin password
+      ansible.builtin.debug:
+        msg: |
+          Admin user created for secure domain access:
+          Username: {{ jitsi_admin_user }}
+          Password: {{ jitsi_admin_password }}
+
+    - name: Remove anonymous authentication line from main VirtualHost (no regex)
+      ansible.builtin.lineinfile:
+        path: "/etc/prosody/conf.avail/{{ jitsi_domain }}.cfg.lua"
+        line: '    authentication = "jitsi-anonymous" -- do not delete me'
+        state: absent
+
+    - name: Add internal authentication to main VirtualHost
+      ansible.builtin.blockinfile:
+        path: "/etc/prosody/conf.avail/{{ jitsi_domain }}.cfg.lua"
+        marker: "-- {mark} ANSIBLE MANAGED BLOCK: authentication config"
+        block: |
+          authentication = "internal_plain"
+        insertafter: '^VirtualHost "{{ jitsi_domain }}"'
+    
+    - name: Set authentication to internal_plain for auth domain
+      ansible.builtin.lineinfile:
+        path: "/etc/prosody/conf.avail/{{ auth_domain }}.cfg.lua"
+        regexp: '^\\s*authentication\\s*=\\s*".*?"'
+        line: '    authentication = "internal_plain"'
+
+    - name: Debug main VirtualHost authentication setting
+      ansible.builtin.shell: |
+        grep -A1 'VirtualHost "{{ jitsi_domain }}"' /etc/prosody/conf.avail/{{ jitsi_domain }}.cfg.lua
+      register: prosody_main_vhost
+      changed_when: false
+
+    - name: Show authentication config for main VirtualHost
+      ansible.builtin.debug:
+        msg: "{{ prosody_main_vhost.stdout }}"
+
+
+    - name: Register admin user in Prosody
+      ansible.builtin.command: >
+        prosodyctl register {{ jitsi_admin_user }} auth.{{ jitsi_domain }} {{ jitsi_admin_password }}
+      args:
+        creates: "/var/lib/prosody/{{ jitsi_admin_user }}.dat"
+
+    - name: Set admin user in Prosody config
+      ansible.builtin.lineinfile:
+        path: "/etc/prosody/conf.avail/{{ jitsi_domain }}.cfg.lua"
+        regexp: '^admins ?='
+        line: 'admins = { "{{ jitsi_admin_user }}" }'
+        insertafter: '^-- Set up admins'
+
+    - name: Add guest virtual host config to Prosody
+      ansible.builtin.blockinfile:
+        path: "/etc/prosody/conf.avail/{{ jitsi_domain }}.cfg.lua"
+        marker: "-- {mark} ANSIBLE MANAGED BLOCK: guest virtual host"
+        block: |
+          VirtualHost "{{ guest_domain }}"
+              authentication = "anonymous"
+              c2s_require_encryption = false
+
+    - name: Configure Jicofo authentication URL
+      ansible.builtin.lineinfile:
+        path: "/etc/jitsi/jicofo/sip-communicator.properties"
+        regexp: '^org.jitsi.jicofo.auth.URL='
+        line: 'org.jitsi.jicofo.auth.URL=XMPP:{{ jitsi_domain }}'
+
+    - name: Ensure Jicofo knows about guest domain
+      ansible.builtin.lineinfile:
+        path: "/etc/jitsi/meet/{{ jitsi_domain }}-config.js"
+        regexp: "^\\s*anonymousdomain:"
+        line: "    anonymousdomain: \"{{ guest_domain }}\","
+        insertafter: "var config = {"
+
+    - name: Enable Prosody config for guest domain
+      ansible.builtin.file:
+        src: "/etc/prosody/conf.avail/{{ jitsi_domain }}.cfg.lua"
+        dest: "/etc/prosody/conf.d/{{ jitsi_domain }}.cfg.lua"
+        state: link
+        force: true
+
+    - name: Restart all Jitsi services
+      ansible.builtin.service:
+        name: "{{ item }}"
+        state: restarted
+      loop:
+        - prosody
+        - jicofo
+        - jitsi-videobridge2
+        - nginx
+
+    # - name: Run Let's Encrypt setup (with email fallback)
+    #   shell: "CERT_EMAIL={{ jitsi_email }} /usr/share/jitsi-meet/scripts/install-letsencrypt-cert.sh"
+    #   args:
+    #     creates: "/etc/letsencrypt/live/{{ jitsi_domain }}/fullchain.pem"
 
     # === Firewall rules ===
     - name: Allow UFW ports (Debian)
