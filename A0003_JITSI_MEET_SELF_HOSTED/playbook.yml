@@ -13,6 +13,7 @@
 
   vars:
     auth_domain: "auth.{{ jitsi_domain }}"
+    guest_domain: "guest.{{ jitsi_domain }}"
     
   tasks:
     - name: Echo back the domain passed to the playbook
@@ -57,13 +58,13 @@
       debug:
         msg: "Admin username is {{ jitsi_admin_user }}"
 
-    - name: Set guest domain
-      ansible.builtin.set_fact:
-        guest_domain: "guest.{{ jitsi_domain }}"
-
     - name: debug guest domain
       debug:
         msg: "Guest domain is {{ guest_domain }}"
+
+    - name: debug auth domain
+      debug:
+        msg: "Auth domain is {{ auth_domain }}"
 
 
     # ================ NOTES ===================
@@ -315,7 +316,7 @@
 
     - name: Debug main VirtualHost authentication setting
       ansible.builtin.shell: |
-        grep -A1 'VirtualHost "{{ jitsi_domain }}"' /etc/prosody/conf.avail/{{ jitsi_domain }}.cfg.lua
+        grep -A3 'VirtualHost "{{ jitsi_domain }}"' /etc/prosody/conf.avail/{{ jitsi_domain }}.cfg.lua
       register: prosody_main_vhost
       changed_when: false
 
@@ -326,7 +327,7 @@
 
     - name: Register admin user in Prosody
       ansible.builtin.command: >
-        prosodyctl register {{ jitsi_admin_user }} auth.{{ jitsi_domain }} {{ jitsi_admin_password }}
+        prosodyctl register {{ jitsi_admin_user }} {{ auth_domain }} {{ jitsi_admin_password }}
       args:
         creates: "/var/lib/prosody/{{ jitsi_admin_user }}.dat"
 
@@ -350,7 +351,7 @@
       ansible.builtin.lineinfile:
         path: "/etc/jitsi/jicofo/sip-communicator.properties"
         regexp: '^org.jitsi.jicofo.auth.URL='
-        line: 'org.jitsi.jicofo.auth.URL=XMPP:auth.{{ jitsi_domain }}'
+        line: 'org.jitsi.jicofo.auth.URL=XMPP:{{ auth_domain }}'
 
     - name: Ensure Jicofo knows about guest domain
       ansible.builtin.lineinfile:
