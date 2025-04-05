@@ -331,14 +331,6 @@
       args:
         creates: "/var/lib/prosody/{{ jitsi_admin_user }}.dat"
 
-
-    - name: Ensure Jitsi admin user is in Prosody admins list
-      ansible.builtin.lineinfile:
-        path: "/etc/prosody/conf.avail/{{ jitsi_domain }}.cfg.lua"
-        regexp: '^admins ?='
-        line: 'admins = { "{{ jitsi_admin_user }}@{{ auth_domain }}" }'
-        create: yes
-
     - name: Check if Prosody user file exists
       stat:
         path: "/var/lib/prosody/auth%2e{{ jitsi_domain | replace('.', '%2e') }}/accounts/{{ jitsi_admin_user | replace('.', '%2e') }}.dat"
@@ -357,7 +349,7 @@
       lineinfile:
         path: "/etc/prosody/conf.avail/{{ jitsi_domain }}.cfg.lua"
         regexp: '^admins\s*='
-        line: "admins = { '{{ jitsi_admin_user }}' }"
+        line: "admins = { '{{ jitsi_admin_user }}@{{ auth_domain }}' }"
         create: yes
         state: present
       when: jitsi_admin_user is defined
@@ -411,6 +403,15 @@
         line: "    anonymousdomain: \"{{ guest_domain }}\","
         insertafter: "var config = {"
 
+    #- name: Ensure guest and auth domains are set in Jitsi Meet config
+    #  blockinfile:
+    #    path: "/etc/jitsi/meet/{{ jitsi_domain }}-config.js"
+    #    marker: "// {mark} ANSIBLE MANAGED BLOCK: auth + guest domain config"
+    #    insertafter: '^\\s*domain:'
+    #    block: |
+    #      anonymousdomain: 'guest.{{ jitsi_domain }}',
+    #      authdomain: 'auth.{{ jitsi_domain }}',
+
     - name: Enable Prosody config for guest domain
       ansible.builtin.file:
         src: "/etc/prosody/conf.avail/{{ jitsi_domain }}.cfg.lua"
@@ -418,6 +419,23 @@
         state: link
         force: true
 
+    - name: Run Let's Encrypt setup (with email, non-interactively)
+      shell: "/usr/share/jitsi-meet/scripts/install-letsencrypt-cert.sh {{ jitsi_email }}"
+      args:
+        creates: "/etc/jitsi/meet/{{ jitsi_domain }}.crt"
+        #creates: "/etc/letsencrypt/live/{{ jitsi_domain }}/fullchain.pem"
+
+    - name: register LE cert file location
+      set_fact:
+        le_cert_file: "/etc/jitsi/meet/{{ jitsi_domain }}.crt"
+
+    - name: verify LE Cert using openssl x509 command
+      shell: "openssl x509 -noout -subject -enddate -startdate -in {{ le_cert_file }}"
+      register: openssl_out
+
+    - name: debug openssl output
+      debug:
+        msg: "{{ openssl_out.stdout_lines }}"
 
     - name: Restart all Jitsi services
       ansible.builtin.service:
@@ -429,10 +447,6 @@
         - jitsi-videobridge2
         - nginx
 
-    - name: Run Let's Encrypt setup (with email fallback)
-      shell: "/usr/share/jitsi-meet/scripts/install-letsencrypt-cert.sh {{ jitsi_email }}"
-      args:
-        creates: "/etc/letsencrypt/live/{{ jitsi_domain }}/fullchain.pem"
 
     # === Firewall rules ===
     - name: Allow UFW ports (Debian)
