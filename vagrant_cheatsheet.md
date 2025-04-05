@@ -78,5 +78,66 @@ vagrant ssh-config
 
 ```
 Copy and paste the output of that into your ~/.ssh/config on Linux, or
-C:\Users\YourUsername\\.ssh\config on windows
+C:\Users\YourUsername\\.ssh\config on windows.
 
+# Playbooks and Vagrant
+
+## Run a custom playbook without hacking the Vagrantfile
+
+1. Create an ssh config for the vagrant vm in the current folder:
+
+```bash
+
+vagrant ssh-config > ssh_config
+
+```
+
+
+## Run a custom playbook without hacking the Vagrantfile
+
+1. Create an ssh config for the vagrant vm in the current folder:
+
+```bash
+
+vagrant ssh-config > ssh_config
+
+```
+
+Create a basic inventory file like so:
+
+```ini
+
+```
+## Run a custom playbook without hacking the Vagrantfile
+
+1. Create an ssh config for the vagrant vm in the current folder:
+
+```bash
+
+vagrant ssh-config > ssh_config
+
+```
+
+2. Create a basic inventory file like so:
+
+```ini
+
+```Create a basic inventory file like so:
+
+```ini
+[vagrant]
+default ansible_host=127.0.0.1 ansible_port=2222 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/default/virtualbox/private_key
+
+```
+
+3. Create the playbook
+
+(I'll assume you did this already, I called mine test_play.yml)
+
+4. Run this command:
+
+```bash
+ansible-playbook -i inventory.ini test_play.yml --ssh-common-args="-F ssh_config  -o StrictHostKeyChecking=no"
+
+```
+(dont forget to replace "test_play.yml" with your playbook name)
