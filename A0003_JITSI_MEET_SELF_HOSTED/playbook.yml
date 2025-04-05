@@ -331,12 +331,51 @@
       args:
         creates: "/var/lib/prosody/{{ jitsi_admin_user }}.dat"
 
-    - name: Set admin user in Prosody config
+
+    - name: Ensure Jitsi admin user is in Prosody admins list
       ansible.builtin.lineinfile:
         path: "/etc/prosody/conf.avail/{{ jitsi_domain }}.cfg.lua"
         regexp: '^admins ?='
-        line: 'admins = { "{{ jitsi_admin_user }}" }'
-        insertafter: '^-- Set up admins'
+        line: 'admins = { "{{ jitsi_admin_user }}@{{ auth_domain }}" }'
+        create: yes
+
+    - name: Check if Prosody user file exists
+      stat:
+        path: "/var/lib/prosody/auth%2e{{ jitsi_domain | replace('.', '%2e') }}/accounts/{{ jitsi_admin_user | replace('.', '%2e') }}.dat"
+      register: prosody_user_file
+
+    - name: Debug Prosody user registration status
+      debug:
+        msg: >-
+          {% if prosody_user_file.stat.exists %}
+            Prosody user file exists: registration likely successful.
+          {% else %}
+            Prosody user file missing! Registration may have failed.
+          {% endif %}
+
+    - name: Ensure Jitsi admin user is in Prosody admins list
+      lineinfile:
+        path: "/etc/prosody/conf.avail/{{ jitsi_domain }}.cfg.lua"
+        regexp: '^admins\s*='
+        line: "admins = { '{{ jitsi_admin_user }}' }"
+        create: yes
+        state: present
+      when: jitsi_admin_user is defined
+
+    - name: Read Prosody config for main domain
+      slurp:
+        src: "/etc/prosody/conf.avail/{{ jitsi_domain }}.cfg.lua"
+      register: main_vhost_config
+
+    - name: Debug admins line presence
+      debug:
+        msg: "Admins line found: {{ admins_line }}"
+      vars:
+        admins_line: >-
+          {{ (main_vhost_config.content | b64decode).splitlines()
+            | select('search', '^admins *= *{.+}$')
+            | list
+            | first | default('NOT FOUND') }}
 
     - name: Add guest virtual host config to Prosody
       ansible.builtin.blockinfile:
@@ -353,6 +392,18 @@
         regexp: '^org.jitsi.jicofo.auth.URL='
         line: 'org.jitsi.jicofo.auth.URL=XMPP:{{ auth_domain }}'
 
+    - name: Read Jicofo sip-communicator.properties
+      slurp:
+        src: "/etc/jitsi/jicofo/sip-communicator.properties"
+      register: jicofo_config
+
+    - name: Debug Jicofo auth URL setting
+      debug:
+        msg: >-
+          {% set lines = jicofo_config.content | b64decode | split('\n') %}
+          {% set match = lines | select('search', '^org\\.jitsi\\.jicofo\\.auth\\.URL=') | list | first | default('NOT FOUND') %}
+          Jicofo auth URL line: {{ match }}
+
     - name: Ensure Jicofo knows about guest domain
       ansible.builtin.lineinfile:
         path: "/etc/jitsi/meet/{{ jitsi_domain }}-config.js"
@@ -367,6 +418,7 @@
         state: link
         force: true
 
+
     - name: Restart all Jitsi services
       ansible.builtin.service:
         name: "{{ item }}"
@@ -377,10 +429,10 @@
         - jitsi-videobridge2
         - nginx
 
-    # - name: Run Let's Encrypt setup (with email fallback)
-    #   shell: "CERT_EMAIL={{ jitsi_email }} /usr/share/jitsi-meet/scripts/install-letsencrypt-cert.sh"
-    #   args:
-    #     creates: "/etc/letsencrypt/live/{{ jitsi_domain }}/fullchain.pem"
+    - name: Run Let's Encrypt setup (with email fallback)
+      shell: "/usr/share/jitsi-meet/scripts/install-letsencrypt-cert.sh {{ jitsi_email }}"
+      args:
+        creates: "/etc/letsencrypt/live/{{ jitsi_domain }}/fullchain.pem"
 
     # === Firewall rules ===
     - name: Allow UFW ports (Debian)
