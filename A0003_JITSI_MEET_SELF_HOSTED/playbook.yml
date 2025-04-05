@@ -12,7 +12,6 @@
       private: no
 
   vars:
-    jitsi_admin_password: "{{ lookup('password', '/dev/null length=20 chars=ascii_letters,digits') }}"
     auth_domain: "auth.{{ jitsi_domain }}"
     
   tasks:
@@ -45,6 +44,10 @@
          please change it by passing evironment variables, like so
          JITSI_DOMAIN=meet.example.com JITSI_EMAIL=jitsi@example.com vagrant up
       when: jitsi_email == "admin@jitsi.meet.local"
+
+    - name: Generate Jitsi admin password
+      set_fact:
+        jitsi_admin_password: "{{ lookup('password', '/dev/null length=20 chars=ascii_letters') }}"
 
     - name: Extract username from jitsi_email
       set_fact:
@@ -347,7 +350,7 @@
       ansible.builtin.lineinfile:
         path: "/etc/jitsi/jicofo/sip-communicator.properties"
         regexp: '^org.jitsi.jicofo.auth.URL='
-        line: 'org.jitsi.jicofo.auth.URL=XMPP:{{ jitsi_domain }}'
+        line: 'org.jitsi.jicofo.auth.URL=XMPP:auth.{{ jitsi_domain }}'
 
     - name: Ensure Jicofo knows about guest domain
       ansible.builtin.lineinfile:
