@@ -27,10 +27,16 @@
 - name: Get Jenkins initial admin password
   command: cat /var/lib/jenkins/secrets/initialAdminPassword
   register: initial_admin_password
+  # Ignore errors if ive gone ahead and configured the controller, as
+  # this file probably gets yeeted automagically
+  ignore_errors: true
 
 - name: Print initial admin password
   debug:
     msg: "Initial Admin Password: {{ initial_admin_password.stdout }}"
+  # If we ignored errors in the last task, this variable might not even be defined
+  # which is totally ok
+  when: initial_admin_password is defined
 
 - name: Install Jenkins CLI
   get_url:
