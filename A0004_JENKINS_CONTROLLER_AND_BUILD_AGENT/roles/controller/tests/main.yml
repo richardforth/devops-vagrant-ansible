@@ -1,0 +1,8 @@
+---
+# Use this file if you want to run all tests, eg
+# ansible-playbook tests/main.yml, or
+# ansible-playbook tests/assert_emacs_installed.yml
+# for example for individual test cases.
+# NOTE: each test case is a fully fledged playbook in its own right
+- import_playbook: assert_emacs_is_installed.yml
+- import_playbook: assert_vim_is_installed.yml

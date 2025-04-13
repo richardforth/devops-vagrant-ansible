@@ -1,0 +1,55 @@
+# This is a Multi-Machine vagrantfile
+# - jenkins-server
+# - jenkins-agent
+
+Vagrant.configure("2") do |config|
+  
+    # Config that is unique to jenkins-server
+    config.vm.define "jenkins-controller" do |ctrlr|
+      ctrlr.vm.box = "bento/ubuntu-24.04"
+      ctrlr.vm.hostname = "jenkins-controller"
+      ctrlr.vm.provider "virtualbox" do |vb|
+        vb.name = "jenkins-server"
+        vb.memory = 2048
+        vb.cpus = 1
+      end
+      ctrlr.vm.network "forwarded_port", guest: 8080, host: 8080
+      ctrlr.vm.network "private_network", ip: "192.168.200.10"
+  
+      ctrlr.vm.post_up_message = "This is the jenkins controller server. Browse to http://localhost:8080"
+      ctrlr.vm.provision "ansible" do |ansible|
+        ansible.playbook = "apply_controller_role.yml"
+      end
+    end
+  
+    # Config that is unique to jenkins-agent
+    config.vm.define "jenkins-build-agent" do |bldagt|
+      bldagt.vm.box = "bento/ubuntu-24.04"
+      bldagt.vm.hostname = "jenkins-agent"
+      bldagt.vm.provider "virtualbox" do |vb|
+        vb.name = "jenkins-agent"
+        vb.memory = 2048
+        vb.cpus = 1
+      end
+  
+      bldagt.vm.network "forwarded_port", guest: 8080, host: 8081
+      bldagt.vm.network "private_network", ip: "192.168.200.20"
+      bldagt.vm.post_up_message = "This is the jenkins build-agent."
+      bldagt.vm.provision "ansible" do |ansible|
+        ansible.playbook = "apply_build-agent_role.yml"
+      end
+    end
+
+   # ANSI Escape codes for bold and red text
+   red_bold = "\033[1;31m"  # Bold Red
+   reset = "\033[0m"        # Reset color
+
+   # Check for a lock file that prevents destroy
+   if File.exist?(".no_destroy") && ARGV.include?("destroy")
+     puts "#{red_bold}POLICY-VIOLATION: ***** W A R N I N G *****#{reset}"
+     puts "#{red_bold}POLICY-VIOLATION: Destroying this Vagrant Environment is not allowed!#{reset}"
+     puts "#{red_bold}POLICY-VIOLATION:   Lock file found.#{reset}"
+     puts "#{red_bold}POLICY-VIOLATION:   Use 'vagrant halt' instead.#{reset}"
+     exit 1
+   end
+end

@@ -1,0 +1,16 @@
+---
+- name: Apply Docker Role
+  hosts: all
+  become: true
+  gather_facts: true
+  tasks:
+
+  - name: Pre-flight Check -  Fail if more than one host is targeted
+    fail:
+      msg: "Too many hosts, use --limit"
+    when: ansible_play_hosts | length > 1
+    tags: preflight
+
+  - name: Apply Docker Role
+    include_role:
+      name: docker

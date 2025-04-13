@@ -1,0 +1,38 @@
+- name: Set Java heap size based on RAM using lineinfile
+  become: yes
+  ansible.builtin.lineinfile:
+    path: /etc/default/jenkins
+    line: 'export JAVA_OPTS="-Xmx{{ (ansible_memtotal_mb // 2) }}m -Xms{{ (ansible_memtotal_mb // 2) }}m"'
+    insertafter: EOF
+    state: present
+  #notify: "Restart Jenkins"
+
+- name: Restart Jenkins Immediately (not using Handlers)
+  service:
+    name: jenkins
+    state: restarted
+  # Increase the timeout to 180 seconds (3 minutes)
+  timeout: 180
+
+- name: Wait for Jenkins to start
+  uri:
+    url: http://localhost:8080/login
+    return_content: yes
+    status_code: 200
+  register: jenkins_started
+  retries: 30
+  delay: 10
+  until: jenkins_started.status == 200
+
+- name: Get Jenkins initial admin password
+  command: cat /var/lib/jenkins/secrets/initialAdminPassword
+  register: initial_admin_password
+
+- name: Print initial admin password
+  debug:
+    msg: "Initial Admin Password: {{ initial_admin_password.stdout }}"
+
+- name: Install Jenkins CLI
+  get_url:
+    url: http://localhost:8080/jnlpJars/jenkins-cli.jar
+    dest: /opt/jenkins-cli.jar

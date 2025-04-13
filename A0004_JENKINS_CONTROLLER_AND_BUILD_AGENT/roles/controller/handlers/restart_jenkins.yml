@@ -1,0 +1,6 @@
+- name: Restart Jenkins
+  service:
+    name: jenkins
+    state: restarted
+  # Increase the timeout to 180 seconds (3 minutes)
+  timeout: 180

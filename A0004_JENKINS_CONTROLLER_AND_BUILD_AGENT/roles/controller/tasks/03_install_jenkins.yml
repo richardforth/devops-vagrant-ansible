@@ -1,0 +1,50 @@
+- name: Remove broken or duplicate Jenkins repo (if exists)
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/jenkins.list
+    state: absent
+
+- name: Clean up any old key files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /usr/share/keyrings/jenkins-2023.gpg
+    - /usr/share/keyrings/jenkins.gpg.asc
+    - /usr/share/keyrings/jenkins.gpg
+
+- name: Download the Jenkins GPG key (2023)
+  ansible.builtin.get_url:
+    url: https://pkg.jenkins.io/debian/jenkins.io-2023.key
+    dest: /usr/share/keyrings/jenkins.gpg.asc
+    mode: '0644'
+
+- name: Convert Jenkins GPG key to binary format
+  ansible.builtin.command: >
+    gpg --dearmor -o /usr/share/keyrings/jenkins.gpg /usr/share/keyrings/jenkins.gpg.asc
+  args:
+    creates: /usr/share/keyrings/jenkins.gpg
+
+- name: Debug jenkins key - command
+  command: >
+    gpg --show-keys /usr/share/keyrings/jenkins.gpg
+  register: jenkins_gpg_key
+
+- name: Debug jenkins key - output
+  debug:
+    msg: "{{ jenkins_gpg_key.stdout_lines }}"
+
+- name: Add the Jenkins repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/usr/share/keyrings/jenkins.gpg] https://pkg.jenkins.io/debian-stable binary/"
+    state: present
+    filename: jenkins
+
+- name: Update apt cache after installing Jenkins repo
+  ansible.builtin.apt:
+    update_cache: yes
+
+- name: Install Jenkins
+  apt:
+    name: jenkins
+    state: present
+

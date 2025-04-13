@@ -1,0 +1,19 @@
+---
+### NOTE THAT THESE TEST CASES ARE PLAYBOOKS IN THEIR OWN RIGHT ###
+- name: Test that vim is installed
+  hosts: localhost
+  gather_facts: true
+  become: true
+  tasks:
+  - name: Run shell command to check vim is installed
+    shell: "vim --version | head -n 1"
+    register: vim_version_test
+
+  - name: debug output
+    debug:
+      msg: "{{ vim_version_test.stdout }}"
+
+  - name: Assert that vim editor is installed
+    assert:
+      that:
+        - "'VIM - Vi IMproved' in vim_version_test.stdout_lines | join(' ')"

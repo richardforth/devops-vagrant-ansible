@@ -1,0 +1,19 @@
+---
+### NOTE THAT THESE TEST CASES ARE PLAYBOOKS IN THEIR OWN RIGHT ###
+- name: Test that docker is installed
+  hosts: localhost
+  gather_facts: true
+  become: true
+  tasks:
+  - name: Run shell command to check docker is installed
+    shell: "docker --version"
+    register: docker_version_test
+
+  - name: debug output
+    debug:
+      msg: "{{ docker_version_test.stdout }}"
+
+#  - name: Assert that docker is installed
+#    assert:
+#      that:
+#        - "'something' in docker_version_test.stdout_lines | join(' ')"

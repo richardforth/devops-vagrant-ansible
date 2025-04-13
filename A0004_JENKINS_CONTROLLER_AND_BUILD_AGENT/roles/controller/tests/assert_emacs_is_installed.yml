@@ -1,0 +1,20 @@
+---
+### NOTE THAT THESE TEST CASES ARE PLAYBOOKS IN THEIR OWN RIGHT ###
+- name: Test that Emacs is installed
+  hosts: localhost
+  gather_facts: true
+  become: true
+  tasks:
+  - name: Run command to check emacs is installed
+    command: >
+      emacs --version
+    register: emacs_version_test
+
+  - name: debug output
+    debug:
+      msg: "{{ emacs_version_test.stdout_lines }}"
+
+  - name: Assert that Emacs editor is installed
+    assert:
+      that:
+        - "'GNU Emacs' in emacs_version_test.stdout_lines | join(' ')"

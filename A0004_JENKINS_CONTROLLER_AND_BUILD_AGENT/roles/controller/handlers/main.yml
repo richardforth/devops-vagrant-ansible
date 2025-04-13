@@ -1,0 +1,3 @@
+---
+# handlers file for jenkins
+- include_tasks: restart_jenkins.yml

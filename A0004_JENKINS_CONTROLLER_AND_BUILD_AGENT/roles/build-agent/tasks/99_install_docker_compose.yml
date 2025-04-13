@@ -1,0 +1,13 @@
+- name: Install required packages for Docker Compose
+  package:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - python3-pip  # Required for installing Docker Compose via pip
+    - python3-setuptools  # Required for installing Docker Compose via pip
+  when: ansible_os_family == 'Debian'  # Adjust package names for other package managers
+
+- name: Install Docker Compose using pip
+  pip:
+    name: docker-compose
+    executable: pip3  # Use pip3 for Python3
