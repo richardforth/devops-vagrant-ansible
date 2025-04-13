@@ -1,5 +1,5 @@
 ---
-- name: Apply Jenkins Role
+- name: Apply Jenkins Controller Role
   hosts: all
   become: true
   gather_facts: true
@@ -11,6 +11,6 @@
     when: ansible_play_hosts | length > 1
     tags: preflight
 
-  - name: Apply Jenkins Role
+  - name: Apply Jenkins Role ==>> Controller
     include_role:
-      name: jenkins
+      name: controller

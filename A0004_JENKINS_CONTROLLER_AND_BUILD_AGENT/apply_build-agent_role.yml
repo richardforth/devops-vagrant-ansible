@@ -1,5 +1,5 @@
 ---
-- name: Apply Docker Role
+- name: Apply Jenkins Build-Agent Role
   hosts: all
   become: true
   gather_facts: true
@@ -11,6 +11,6 @@
     when: ansible_play_hosts | length > 1
     tags: preflight
 
-  - name: Apply Docker Role
+  - name: Apply Jenkins Role ===>> Build-Agent
     include_role:
-      name: docker
+      name: build-agent
