@@ -15,8 +15,7 @@ Vagrant.configure("2") do |config|
       end
       ctrlr.vm.network "forwarded_port", guest: 8080, host: 8080
       ctrlr.vm.network "private_network", ip: "192.168.200.10"
-  
-      ctrlr.vm.post_up_message = "This is the jenkins controller server. Browse to http://localhost:8080"
+      ctrlr.vm.post_up_message = "This is the jenkins controller server. Browse to http://192.168.1.113:8080"
       ctrlr.vm.provision "ansible" do |ansible|
         ansible.playbook = "apply_controller_role.yml"
       end
@@ -34,7 +33,7 @@ Vagrant.configure("2") do |config|
   
       bldagt.vm.network "forwarded_port", guest: 8080, host: 8081
       bldagt.vm.network "private_network", ip: "192.168.200.20"
-      bldagt.vm.post_up_message = "This is the jenkins build-agent."
+      bldagt.vm.post_up_message = "This is the jenkins build-agent. Browse to http://192.168.1.113:8081"
       bldagt.vm.provision "ansible" do |ansible|
         ansible.playbook = "apply_build-agent_role.yml"
       end
