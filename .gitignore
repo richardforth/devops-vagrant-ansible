@@ -12,6 +12,14 @@ debug_playbook.yaml
 solr/
 moodle/
 
+# Small Sassy Vagrant Envs I don't want to commit to GitHub
+bash_dev/
+perl_dev/
+fortran_dev/
+rust_dev/
+c_dev/
+cpp_dev/
+
 # === emacs generated backup files ===
 *~
 
