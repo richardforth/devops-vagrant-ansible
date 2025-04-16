@@ -19,6 +19,7 @@ fortran_dev/
 rust_dev/
 c_dev/
 cpp_dev/
+docker_dev/
 
 # === emacs generated backup files ===
 *~
