@@ -1,0 +1,72 @@
+---
+- name: Set up Google Authenticator in PAM
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Install the libpam-google-authenticator package
+      apt:
+        name: "libpam-google-authenticator"
+        update_cache: yes
+        state: present
+
+    - name: Disable password authentication for SSH
+      lineinfile:
+        dest: "/etc/pam.d/sshd"
+        regex: "@include common-auth"
+        line: "#@include common-auth"
+
+
+    - name: Configure PAM to use GoogleAuthenticator for SSH logins
+      lineinfile:
+        dest: "/etc/pam.d/sshd"
+        line: "auth required pam_google_authenticator.so nullok"
+
+    - name: Set ChallengeResponseAuthentication to Yes
+      lineinfile:
+        dest: "/etc/ssh/sshd_config"
+        regexp: "^ChallengeResponseAuthentication (yes|no)"
+        line: "ChallengeResponseAuthentication yes"
+        state: present
+
+    - name: Set KbdInteractiveAuthentication to Yes
+      lineinfile:
+        dest: "/etc/ssh/sshd_config"
+        regexp: "^KbdInteractiveAuthentication (yes|no)"
+        line: "KbdInteractiveAuthentication yes"
+        state: present
+
+    - name: Set PasswordAuthentication to no
+      lineinfile:
+        dest: "/etc/ssh/sshd_config"
+        regexp: "^#PasswordAuthentication (yes|no)"
+        line: "PasswordAuthentication no"
+        state: present
+
+    - name: Create a user (other than vagrant) to test Google Authenticator
+      user:
+       name: gauthtest
+       shell: /bin/bash
+    
+    - name: restart ssh daemon
+      service:
+        name: ssh
+        state: restarted
+
+    - name: Show post-playbook manual steps to configure google authenticator
+      debug:
+        msg: "{{ item }}"
+      loop:
+        - ";;;;; NEXT STEPS ;;;;"
+        - "0. Log in to the VM as vagrant: vagrant ssh"
+        - "1. Become the gtauthtest user: sudo su - gauthtest"
+        - "2. Run google-authenticator as gauthtest user: google-authenticator"
+        - "3. Follow the prompts and scan the QR code in the Google Authenticator App on your phone"
+        - "4. Answer remaining questions"
+        - "5. Log out of the VM"
+        - "6. Log in as gauthtest user"
+        - "7. Enter password"
+        - "8. See prompt for Google Authenticator code"
+        - "9. Use code from app on your phone."
+        - "10. Congratulations!"
+
