@@ -1,0 +1,26 @@
+---
+- name: A simple playbook to install and start nginx webserver
+  hosts: all
+  become: yes
+  become_user: root
+  gather_facts: no
+  tasks:
+    - name: update package cache
+      apt:
+        update_cache: yes
+
+    - name: upgrade all packages to latest version
+      apt:
+        name: "*"
+        state: latest
+
+    - name: install nginx
+      apt:
+        name: nginx
+        state: present
+
+    - name: start nginx
+      service:
+        name: nginx
+        state: started
+        enabled: yes
