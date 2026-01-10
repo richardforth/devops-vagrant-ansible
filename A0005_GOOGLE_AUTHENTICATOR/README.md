@@ -1,4 +1,4 @@
-# Google Autehnticator Test Environment
+# Google Authenticator Test Environment
 
 ```
 

@@ -59,7 +59,7 @@
       loop:
         - ";;;;; NEXT STEPS ;;;;"
         - "0. Log in to the VM as vagrant: vagrant ssh"
-        - "1. Become the gtauthtest user: sudo su - gauthtest"
+        - "1. Become the gauthtest user: sudo su - gauthtest"
         - "2. Run google-authenticator as gauthtest user: google-authenticator"
         - "3. Follow the prompts and scan the QR code in the Google Authenticator App on your phone"
         - "4. Answer remaining questions"
