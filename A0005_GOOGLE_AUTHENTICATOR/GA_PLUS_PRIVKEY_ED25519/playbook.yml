@@ -46,16 +46,21 @@
         line: "KbdInteractiveAuthentication yes"
         state: present
 
-    - name: Create a user with SSH-KEY auth (other than vagrant) to test Google Authenticator
+    - name: Create a user (other than vagrant) to test Google Authenticator
       user:
        name: gauthtest
        shell: /bin/bash
-       generate_ssh_key: true
-       ssh_key_type: ed25519
-       ssh_key_file: 
-       ssh_key_comment: gauthtest@vagrant"
 
-    - name: Add generated public key to authorized_keys
+    - name: Generate ed25519 SSH keypair in current directory
+      community.crypto.openssh_keypair:
+        path: "{{ key_path }}"
+        type: ed25519
+        comment: "gauthtest@github-lab"
+        mode: "0600"
+      delegate_to: localhost
+      become: false
+      
+    - name: Add generated public key to gauthtest authorized_keys
       ansible.posix.authorized_key:
         user: gauthtest
         state: present
@@ -71,7 +76,7 @@
         msg: "{{ item }}"
       loop:
         - ";;;;; NEXT STEPS ;;;;"
-        - "0. Log in to the VM as vagrant: vagrant ssh"
+        - "0. Log in to the VM as vagrant - specifying the SSH key: ssh -p 2222 -i gauthtest_ed25519 gauthtest@127.0.0.1"
         - "1. Become the gauthtest user: sudo su - gauthtest"
         - "2. Run google-authenticator as gauthtest user: google-authenticator"
         - "3. Follow the prompts and scan the QR code in the Google Authenticator App on your phone"
