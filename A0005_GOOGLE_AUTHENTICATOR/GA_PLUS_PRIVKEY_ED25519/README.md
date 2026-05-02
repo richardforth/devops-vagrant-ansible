@@ -1,5 +1,5 @@
 # Google Authenticator Test Environment
-> These steps are `In Development / Testing` by Richard A. Forth 2026-05-02 Sat
+> These steps are `Verified Working` by Richard A. Forth 2026-05-02 Sat
 
 ```
 
@@ -14,7 +14,7 @@ Playbook inspired by DevOps for the Desperate book.
 
 > What we expect to see!
 ```
-$ ssh -p 2222 gauthtest@127.0.0.1
+$ ssh -p 2222 -i gauthtest_ed25519 gauthtest@127.0.0.1
 (gauthtest@127.0.0.1) Verification code:
 gauthtest@vagrant:~$
 
@@ -36,7 +36,7 @@ vagrant up
 > 3. Configure PAM to use GoogleAuthenticator for SSH logins
 > 4. Set ChallengeResponseAuthentication to yes
 > 5. Set KbdInteractiveAuthentication to yes
-> 6. Sett PasswordAuthentication to no
+> 6. Set PasswordAuthentication to no
 > 7. Set Authentication Methods for vagrant
 > 8. Restart ssh daemon
 > 9. Create a test user to apply google authenticator to (other than vagrant) with an ed25519 SSH key
@@ -49,7 +49,7 @@ vagrant up
 > Note: the key will not be comitted to GitHub
 
 ```
-ssh -p 2222 -i /path/to/ssh_key gauthtest@127.0.0.1
+ssh -p 2222 -i gauthtest_ed25519 gauthtest@127.0.0.1
 
 ```
 
@@ -99,7 +99,7 @@ v. If the computer that you are logging into isn't hardened against brute-force
 
 ```bash
 
-ssh -p 2222 gauthtest@127.0.0.1
+ssh -p 2222 -i gauthtest_ed25519 gauthtest@127.0.0.1
 
 Assuming your SSH key was accepted (usually silently if OK)...
 
@@ -107,7 +107,7 @@ Imediately after, you should be prompted for a code from your google-authenticat
 > or use one of your emergency scratch codes (they can only be consumed once)
 
 ```
-$ ssh -p 2222 gauthtest@127.0.0.1
+$ ssh -p 2222 -i gauthtest_ed25519 gauthtest@127.0.0.1
 (gauthtest@127.0.0.1) Verification code:
 gauthtest@vagrant:~$
 
