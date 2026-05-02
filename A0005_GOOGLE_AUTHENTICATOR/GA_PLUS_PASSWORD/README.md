@@ -1,9 +1,23 @@
 # Google Authenticator Test Environment
-> These steps are Currently under Testing and Experimantation by Richard A. Forth 2026-05-02 Sat
+> These steps are `Verified Working` by Richard A. Forth 2026-05-02 Sat
 
 ```
 
 Playbook inspired by DevOps for the Desperate book.
+
+```
+
+# Expected behaviour when complete:
+
+1. Prompt for SSH password
+2. Prompt for Authenticaor Token
+
+> Verified!
+```
+$ ssh -p 2222 gauthtest@127.0.0.1
+(gauthtest@127.0.0.1) Password:
+(gauthtest@127.0.0.1) Verification code:
+gauthtest@vagrant:~$
 
 ```
 
