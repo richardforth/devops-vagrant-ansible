@@ -64,7 +64,7 @@ Vagrant.configure("2") do |config|
      vb.memory = "1024"
 
      # name the VM
-     vb.name = "gauth-test"
+     vb.name = "gauth-test-ga-only"
    end
   #
   # View the documentation for the provider you are using for more
