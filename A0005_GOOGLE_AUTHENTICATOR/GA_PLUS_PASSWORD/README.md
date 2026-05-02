@@ -108,7 +108,7 @@ $ ssh -p 2222 gauthtest@127.0.0.1
 
 ```
 
-Imediately after, you shoudl be prompted for a code form your google-authenticator app.
+Imediately after, you should be prompted for a code form your google-authenticator app.
 > or use one of your emergency scratch codes (they can only be consumed once)
 
 ```
