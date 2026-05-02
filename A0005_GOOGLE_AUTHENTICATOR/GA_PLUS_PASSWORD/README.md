@@ -54,15 +54,23 @@ ssh -p 2222 gauthtest@127.0.0.1
 1. Run `google-authenticator` as `gauthtest` user
 2. Follow Onscreen instructions, scan QR code in Google Authenticator App
 3. Answer the remaining questions
->   i. Do you want authentication tokens to be time based? (y/n) y
+i. Do you want authentication tokens to be time based? (y/n) y
+
 >     (scan the QR code with the Google Autehnticator App on your phone)
+
 >     (enter the code)
+
 >     (save your emergency scratch codes, presented yo you on screen)
->   ii. Do you swant to update your "/home.gauthtest/.google_authenticator" file? (y/n) y
->   iii. Do you want to disallow multiple uses of the same authentication
+
+ii. Do you swant to update your "/home.gauthtest/.google_authenticator" file? (y/n) y
+iii. Do you want to disallow multiple uses of the same authentication
+
 >        token? This restricts you to one login about every 30s, but it increases
+
 >        your chances to notice or even prevent man-in-the-middle attacks (y/n) y
->   iv. By default, a new token is generated every 30 seconds by the mobile app.
+
+iv. By default, a new token is generated every 30 seconds by the mobile app.
+
 >       In order to compensate for possible time-skew between the client and the server,
 >       we allow an extra token before and after the current time. This allows for a
 >       time skew of up to 30 seconds between authentication server and client. If you
@@ -71,10 +79,15 @@ ssh -p 2222 gauthtest@127.0.0.1
 >       code, the next code) to 17 permitted codes (the 8 previous codes, the current
 >       code, and the 8 next codes). This will permit for a time skew of up to 4 minutes
 >       between client and server.
+
 >       Do you want to do so? (y/n) n
->   v. If the computer that you are logging into isn't hardened against brute-force
+
+v. If the computer that you are logging into isn't hardened against brute-force
+
 >      login attempts, you can enable rate-limiting for the authentication module.
+
 >      By default, this limits attackers to no more than 3 login attempts every 30s.
+
 >      Do you want to enable rate-limiting? (y/n) y
 
 4. Log out of the VM
