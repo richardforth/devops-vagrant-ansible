@@ -1,6 +1,7 @@
 # Google Authenticator Test Environment
-> These steps are `Verified Working` by Richard A. Forth 2026-05-02 Sat
-
+> These steps are `Currently NOT Working` by Richard A. Forth 2026-05-02 Sat
+> I think it might be because the Google Athenticator prompt is tied to a password prompt?
+> (thinking out loud) so why does this work OK when we disable password auth in Lab 1 (GA_ONLY)?
 ```
 
 Playbook inspired by DevOps for the Desperate book.
