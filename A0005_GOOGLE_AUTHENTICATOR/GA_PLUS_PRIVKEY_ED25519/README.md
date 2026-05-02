@@ -1,7 +1,8 @@
 # Google Authenticator Test Environment
-> These steps are `Currently NOT Working` by Richard A. Forth 2026-05-02 Sat
-> I think it might be because the Google Athenticator prompt is tied to a password prompt?
-> (thinking out loud) so why does this work OK when we disable password auth in Lab 1 (GA_ONLY)?
+> These steps are `Currently  Working but with nuance` by Richard A. Forth 2026-05-02 Sat
+> Turns out with ssh key and google AUTH it accepts EITHER:
+> IF YOU SUPPLY AN SSH KEY, you can get in fine
+> IF YOU DO NOT SUPPLY AN SSH KEY you wil get prompted for the Google Authenticator code 
 ```
 
 Playbook inspired by DevOps for the Desperate book.
@@ -13,11 +14,32 @@ Playbook inspired by DevOps for the Desperate book.
 1. Verify the SSH key (this should be transparent unless the wrong key is given or no key provided)
 2. Prompt for Authenticaor Token
 
-> What we expect to see!
+> What we expected to see!
 ```
 $ ssh -p 2222 -i gauthtest_ed25519 gauthtest@127.0.0.1
 (gauthtest@127.0.0.1) Verification code:
 gauthtest@vagrant:~$
+
+
+> What we got!
+> IF YOU SUPPLY AN SSH KEY, you can get in fine
+
+```
+
+$ ssh -p 2222 -i gauthtest_ed25519 gauthtest@127.0.0.1
+gauthtest@vagrant:~$
+
+```
+
+> IF YOU DO NOT SUPPLY AN SSH KEY you will get prompted for the Google Authenticator code 
+
+
+```
+
+$ ssh -p 2222 gauthtest@127.0.0.1
+(gauthtest@127.0.0.1) Verification code:
+gauthtest@vagrant:~$
+
 
 ```
 
@@ -45,7 +67,7 @@ vagrant up
 
 # Manual steps - User:
 
-## Login directly as the gauthtest user
+## Login directly as the gauthtest user, pass in the ssh key with the -i flag
 > make sure to specify the key that is generated
 > Note: the key will not be comitted to GitHub
 
@@ -98,20 +120,24 @@ v. If the computer that you are logging into isn't hardened against brute-force
 
 # Testing:
 
+## Test 1: supply a valid SSH key
+> Observe that you dont get prompted for the Google Authenticator token
+
 ```bash
 
 ssh -p 2222 -i gauthtest_ed25519 gauthtest@127.0.0.1
+...
+gauthtest@vagrant:~$
+```
 
-Assuming your SSH key was accepted (usually silently if OK)...
-
-Imediately after, you should be prompted for a code from your google-authenticator app.
-> or use one of your emergency scratch codes (they can only be consumed once)
+## Test 2: do not supply an ssh key
+> Observe that this time you will get prompted for the Google Authenticator Token
 
 ```
-$ ssh -p 2222 -i gauthtest_ed25519 gauthtest@127.0.0.1
+$ ssh -p 2222 gauthtest@127.0.0.1
 (gauthtest@127.0.0.1) Verification code:
+...
 gauthtest@vagrant:~$
-
 ```
 
 Enter the code from your Google Authenticator App
